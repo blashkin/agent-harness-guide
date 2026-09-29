@@ -119,6 +119,9 @@ header.title .meta span{display:block;font-size:10.5px;letter-spacing:.08em;text
 .defs .h{grid-column:1/-1;font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 @media (max-width:560px){.defs{grid-template-columns:1fr}.defs dd{margin-bottom:6px}}
 a{color:var(--blue)}
+ol.sum{margin:0;padding-left:22px;display:flex;flex-direction:column;gap:8px;font-size:15px;max-width:80ch}
+ol.sum li::marker{font:600 13px var(--mono);color:var(--blue)}
+ol.sum a.to{font:12px var(--mono);white-space:nowrap;text-decoration:none;border-bottom:1px dashed var(--blue)}
 .foot{font:12.5px/1.6 var(--mono);color:var(--muted);border-top:1px dashed var(--line-strong);padding-top:14px}
 nav.toc summary{display:none;list-style:none;cursor:pointer;font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
 nav.toc summary::-webkit-details-marker{display:none}
@@ -151,6 +154,7 @@ nav.toc summary::-webkit-details-marker{display:none}
 
 <div class="layout">
 <nav class="toc" aria-label="Оглавление"><details class="toc-d" open><summary>Оглавление</summary><div class="toc-l">
+  <a href="#sum"><span class="n">i</span>Главное за минуту</a>
   <span class="grp">Часть 1. Механика</span>
   <a href="#ch1"><span class="n">1</span>Как агент получает контекст</a>
   <a href="#ch2"><span class="n">2</span>Запрос, кэш, деньги</a>
@@ -187,6 +191,26 @@ nav.toc summary::-webkit-details-marker{display:none}
     <div><span>Листов</span>16</div>
   </div>
 </header>
+
+<!-- ========== summary ========== -->
+<section class="sheet" id="sum">
+  <div class="stamp"><div><span class="lbl">глава</span><span class="no">i</span></div><div><span class="lbl">сводка</span><span class="ttl">Главное за минуту</span></div><div class="src">по всем листам</div></div>
+  <div class="body">
+    <ol class="sum">
+      <li><b>Реплика - не один запрос, а цикл.</b> Каждый шаг заново отправляет весь контекст, но неизменное начало читается из кэша. В примере из кэша пришло 97.6% входных токенов. <a class="to" href="#ch1">листы 1-2</a></li>
+      <li><b>Кэш ломают</b> смена модели, <code>/compact</code>, пауза дольше TTL и включение fast mode. TTL - 1 час на подписке и 5 минут по API. Смена effort на Opus 5.5, Sonnet 5.5 и Fable 5.1 кэш не ломает, на других моделях ломает. <a class="to" href="#ch2">лист 2</a></li>
+      <li><b>Правка CLAUDE.md посреди сессии не действует</b> до <code>/clear</code>, <code>/compact</code> или перезапуска. <a class="to" href="#ch3">листы 2-3</a></li>
+      <li><b>Постоянный контекст входит в каждый запрос.</b> Инструкции, листинг скиллов и память оплачиваются десятки раз за сессию. <a class="to" href="#ch1">лист 1</a></li>
+      <li><b>Claude Code и claude.ai живут раздельно.</b> Чаты и Cowork делят память и инструкции между собой, а Claude Code не видит ни того, ни другого. Одно правило приходится класть в оба места. <a class="to" href="#ch3">лист 3</a></li>
+      <li><b>Скилл в контексте - это только описание.</b> Плохое описание, и скилл не вызовется. <a class="to" href="#ch4">лист 4</a></li>
+      <li><b>Сабагент возвращает только отчет.</b> Это самый дешевый способ прочитать много. <a class="to" href="#ch5">лист 5</a></li>
+      <li><b>Хук - единственный способ сделать что-то гарантированно,</b> без просьбы к модели. <a class="to" href="#ch6">лист 6</a></li>
+      <li><b>MCP грузятся лениво,</b> в запросе лежат только имена инструментов. CLI сервиса часто дешевле MCP. <a class="to" href="#ch7">лист 7</a></li>
+      <li><b>Desktop дороже CLI на 20-30k в каждом запросе,</b> а по API-ключу Desktop не работает. <a class="to" href="#ch9">листы 9, 16</a></li>
+      <li><b>Главный рычаг экономии - короткие сессии.</b> Сессия на 200+ запросов читает в 20-150 раз больше короткой. <a class="to" href="#p3">лист 13</a></li>
+    </ol>
+  </div>
+</section>
 
 <!-- ========== 1 ========== -->
 <section class="sheet" id="ch1">
@@ -264,7 +288,8 @@ nav.toc summary::-webkit-details-marker{display:none}
       <thead><tr><th>Что ломает кэш</th><th>Последствие</th></tr></thead>
       <tbody>
         <tr><td>Смена модели посреди сессии</td><td>Вся переписка перечитывается и перезаписывается по полной цене</td></tr>
-        <tr><td>Смена effort</td><td>То же. Исключение - Opus 5.5 и Fable 5.1 на подписке</td></tr>
+        <tr><td>Смена effort</td><td>На большинстве моделей то же. На Opus 5.5, Sonnet 5.5 и Fable 5.1 по подписке и API-ключу кэш сохраняется</td></tr>
+        <tr><td>Включение fast mode</td><td>Первый запрос с ним перечитывает всю переписку, дальше кэш держится</td></tr>
         <tr><td><code>/compact</code> и автосжатие</td><td>Слой переписки строится заново, но короче</td></tr>
         <tr><td>Подключение MCP, чьи тулы грузятся сразу</td><td>Меняется префикс с инструментами. Отложенные не влияют</td></tr>
         <tr><td>Пауза больше TTL</td><td>Кэш истек, следующий запрос пишет все заново</td></tr>
