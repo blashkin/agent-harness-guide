@@ -1,0 +1,790 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Анатомия обвязки агента</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Onest:wght@400;500;600&display=swap">
+<style>
+:root{
+  --paper:#f6f7f4; --sheet:#fbfbf9; --ink:#1a2330; --muted:#5b6673; --line:#9fb2c6; --line-strong:#2f5d8a; --grid:#e3e8ec;
+  --blue:#2f5d8a; --blue-soft:#e4edf6; --red:#b8482a; --red-soft:#f7e5dd; --green:#2f6f4a; --green-soft:#e1efe6; --gray-soft:#eceee9;
+  --sans:"Onest",-apple-system,"Segoe UI",Roboto,Arial,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --paper:#0e151e; --sheet:#121b26; --ink:#dde6ef; --muted:#93a3b4; --line:#35506b; --line-strong:#7fb0de; --grid:#16212d;
+    --blue:#7fb0de; --blue-soft:#18293b; --red:#ee8d6c; --red-soft:#3a2119; --green:#79c497; --green-soft:#17301f; --gray-soft:#1a2430;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --paper:#0e151e; --sheet:#121b26; --ink:#dde6ef; --muted:#93a3b4; --line:#35506b; --line-strong:#7fb0de; --grid:#16212d;
+  --blue:#7fb0de; --blue-soft:#18293b; --red:#ee8d6c; --red-soft:#3a2119; --green:#79c497; --green-soft:#17301f; --gray-soft:#1a2430;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{background-color:var(--paper);background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);background-size:24px 24px;color:var(--ink);font:15.5px/1.62 var(--sans);padding-inline:16px;padding-block:28px 72px}
+.layout{max-width:1180px;margin:0 auto;display:grid;grid-template-columns:220px minmax(0,1fr);gap:36px}
+@media (max-width:900px){.layout{grid-template-columns:1fr;gap:20px}}
+nav.toc{position:sticky;top:calc(env(safe-area-inset-top,0px) + 20px);align-self:start;font:13px/1.4 var(--mono);display:flex;flex-direction:column;gap:1px;max-height:calc(100vh - 40px);overflow:auto;background:var(--sheet);border:1px solid var(--line);padding:12px}
+@media (max-width:900px){nav.toc{position:static;max-height:none}}
+nav.toc .grp{font-size:11px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin:10px 0 4px;border-bottom:1px dashed var(--line);padding-bottom:3px}
+nav.toc .grp:first-child{margin-top:0}
+nav.toc a{color:var(--ink);text-decoration:none;padding:3px 6px;display:flex;gap:8px}
+nav.toc a:hover,nav.toc a:focus-visible{background:var(--blue-soft);outline:none}
+nav.toc a .n{color:var(--blue);min-width:22px}
+main{display:flex;flex-direction:column;gap:40px;min-width:0}
+h1,h2,h3{margin:0;line-height:1.15;text-wrap:balance}
+h1{font:600 clamp(30px,4.5vw,42px)/1.1 var(--sans);letter-spacing:-.01em}
+h2{font:600 24px/1.2 var(--sans)}
+h3{font:600 16px/1.3 var(--sans)}
+p{margin:0;max-width:74ch}
+code{font-family:var(--mono);font-size:.84em;background:var(--gray-soft);padding:1px 5px;overflow-wrap:anywhere}
+.mono{font-family:var(--mono)}
+.muted{color:var(--muted)}
+.sheet{background:var(--sheet);border:1px solid var(--line-strong);display:flex;flex-direction:column;scroll-margin-top:20px}
+.stamp{display:grid;grid-template-columns:88px minmax(0,1fr) auto;border-bottom:1px solid var(--line-strong);font-family:var(--mono)}
+.stamp>div{padding:10px 14px;border-right:1px solid var(--line)}
+.stamp>div:last-child{border-right:0}
+.stamp .lbl{font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:block}
+.stamp .no{font:600 28px/1 var(--mono);color:var(--blue)}
+.stamp .ttl{font:600 21px/1.2 var(--sans)}
+.stamp .src{font-size:12px;color:var(--muted);align-self:center;white-space:nowrap}
+@media (max-width:620px){.stamp{grid-template-columns:64px minmax(0,1fr)}.stamp>div:last-child{display:none}}
+.body{padding:18px;display:flex;flex-direction:column;gap:16px}
+.fig{border:1px dashed var(--line-strong);padding:16px 14px 12px;display:flex;flex-direction:column;gap:12px;position:relative;overflow-x:auto}
+.fig .cap{font:12px var(--mono);color:var(--muted)}
+.fig .fig-note{margin:0;font-size:13px;line-height:1.5;color:var(--muted)}
+.fig .cap b{color:var(--blue);font-weight:500}
+.row{display:flex;gap:10px;align-items:stretch;flex-wrap:wrap}
+.col{display:flex;flex-direction:column;gap:8px}
+.box{border:1px solid var(--line-strong);background:var(--sheet);padding:8px 10px;font:12.5px/1.4 var(--mono);display:flex;flex-direction:column;gap:2px;min-width:0}
+.box .t{font-weight:600}
+.box .s{color:var(--muted);font-size:11.5px}
+.box.hl{border-color:var(--blue);background:var(--blue-soft)}
+.box.warn{border-color:var(--red);background:var(--red-soft);color:var(--red)}
+.box.ok{border-color:var(--green);background:var(--green-soft)}
+.box.ghost{border-style:dashed;color:var(--muted)}
+.arr{font:12px var(--mono);color:var(--blue);display:flex;align-items:center;justify-content:center;padding:0 2px;white-space:nowrap}
+.v-arr{display:flex;flex-direction:column;align-items:center;padding:2px 0}
+.v-arr::before{content:"";width:1px;height:14px;background:var(--blue)}
+.v-arr::after{content:"";border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--blue)}
+.tag{font:11px var(--mono);color:var(--blue);border:1px solid var(--blue);padding:0 5px;margin-left:6px;white-space:nowrap}
+.dim{display:flex;align-items:center;gap:8px;font:11.5px var(--mono);color:var(--muted)}
+.dim::before,.dim::after{content:"";flex:1;border-top:1px solid var(--muted)}
+.stackbar{display:flex;height:34px;border:1px solid var(--line-strong)}
+.stackbar>div{border-right:1px solid var(--line-strong);display:flex;align-items:center;justify-content:center;font:11px var(--mono);overflow:hidden;white-space:nowrap;padding:0 4px}
+.stackbar>div:last-child{border-right:0}
+.spec{width:100%;border-collapse:collapse;font-size:14px}
+.spec th{width:150px;text-align:left;vertical-align:top;font:500 11px/1.5 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:9px 12px 9px 0;border-top:1px solid var(--line)}
+.spec td{padding:8px 0;border-top:1px solid var(--line);vertical-align:top}
+@media (max-width:560px){.spec th,.spec td{display:block;width:auto}.spec td{border-top:0;padding-top:0}}
+.tbl-wrap{overflow-x:auto}
+table.t{border-collapse:collapse;width:100%;font-size:14px}
+table.t th{font:500 11px var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line-strong)}
+table.t td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.num{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.notes{display:flex;flex-direction:column;gap:8px}
+.note{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;font-size:14px}
+.note .m{font:600 12px var(--mono);color:var(--red);border:1px solid var(--red);padding:1px 6px;height:max-content;white-space:nowrap}
+.note .m.i{color:var(--blue);border-color:var(--blue)}
+.note .m.g{color:var(--green);border-color:var(--green)}
+.hbars{display:grid;grid-template-columns:minmax(110px,170px) 1fr;gap:6px 12px;align-items:center;font:12.5px var(--mono)}
+.hbars .t{display:flex;align-items:center;gap:8px;min-width:0}
+.hbars .f{height:12px;background:var(--blue);min-width:2px}
+.hbars .v{white-space:nowrap;color:var(--muted)}
+@media (max-width:520px){.hbars{grid-template-columns:1fr}}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));border:1px solid var(--line-strong)}
+.kpis>div{padding:10px 12px;border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.kpis .k{font:600 24px/1.1 var(--mono);font-variant-numeric:tabular-nums}
+.kpis .d{font-size:12.5px;color:var(--muted);margin-top:4px}
+pre.code{background:var(--gray-soft);border-left:2px solid var(--blue);padding:12px 14px;margin:0;overflow-x:auto;font:12.5px/1.55 var(--mono)}
+ul.plain{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:5px;font-size:14px}
+.cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0;border:1px solid var(--line)}
+.cols>div{padding:12px 14px;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+.cols>div:last-child{border-right:0}
+header.title{background:var(--sheet);border:1px solid var(--line-strong);display:grid;grid-template-columns:minmax(0,1fr) 260px}
+header.title .main{padding:22px 22px 20px;display:flex;flex-direction:column;gap:12px;border-right:1px solid var(--line-strong)}
+header.title .meta{font:12px/1.6 var(--mono);display:flex;flex-direction:column}
+header.title .meta div{padding:8px 14px;border-bottom:1px solid var(--line)}
+header.title .meta div:last-child{border-bottom:0}
+header.title .meta span{display:block;font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:760px){header.title{grid-template-columns:1fr}header.title .main{border-right:0;border-bottom:1px solid var(--line-strong)}}
+.lead{font-size:16.5px;color:var(--muted);max-width:76ch}
+.defs{border-bottom:1px solid var(--line-strong);background:var(--blue-soft);padding:12px 18px;display:grid;grid-template-columns:max-content minmax(0,1fr);gap:6px 16px;font-size:14px}
+.defs dt{font:600 12.5px/1.6 var(--mono);color:var(--blue);margin:0}
+.defs dd{margin:0;max-width:78ch}
+.defs .h{grid-column:1/-1;font:500 10.5px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+@media (max-width:560px){.defs{grid-template-columns:1fr}.defs dd{margin-bottom:6px}}
+a{color:var(--blue)}
+nav.toc summary{display:none;list-style:none;cursor:pointer;font:600 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--blue)}
+nav.toc summary::-webkit-details-marker{display:none}
+.toc-l{display:flex;flex-direction:column;gap:1px}
+@media (max-width:900px){
+  nav.toc{position:sticky;top:0;z-index:5;max-height:none;padding:10px 12px;box-shadow:0 2px 0 var(--paper)}
+  nav.toc summary{display:flex;justify-content:space-between}
+  nav.toc summary::after{content:"+"}
+  nav.toc details[open] summary::after{content:"-"}
+  nav.toc details[open] .toc-l{margin-top:8px;max-height:60vh;overflow:auto}
+}
+@media (max-width:560px){
+  table.t thead{display:none}
+  table.t,table.t tbody,table.t tr{display:block;width:100%}
+  table.t tr{border-bottom:1px solid var(--line);padding:8px 0}
+  table.t td{display:block;position:relative;border:0;padding:3px 0 3px 38%;min-height:1.6em}
+  table.t td::before{content:attr(data-label);position:absolute;left:0;top:5px;width:36%;font:500 10.5px/1.5 var(--mono);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);overflow-wrap:anywhere}
+  table.t td:first-child{padding-left:0;font-weight:600;padding-bottom:4px}
+  table.t td:first-child::before{content:none}
+  table.t td:empty{display:none}
+  td.num{text-align:left}
+  .stackbar{flex-direction:column;height:auto}
+  .stackbar>div{flex:none!important;justify-content:flex-start;border-right:0;border-bottom:1px solid var(--line);padding:6px 8px 9px;white-space:normal;position:relative;overflow:visible}
+  .stackbar>div:last-child{border-bottom:0}
+  .stackbar>div::after{content:"";position:absolute;left:8px;bottom:3px;height:3px;width:calc((100% - 16px) * var(--w,0));background:var(--blue)}
+  .row[style*="nowrap"]{flex-wrap:wrap!important}
+  .row[style*="nowrap"]>.box{flex:1 1 40%!important}
+}
+</style>
+
+<div class="layout">
+<nav class="toc" aria-label="Оглавление"><details class="toc-d" open><summary>Оглавление</summary><div class="toc-l">
+  <span class="grp">Часть 1. Механика</span>
+  <a href="#ch1"><span class="n">1</span>Как агент получает контекст</a>
+  <a href="#ch2"><span class="n">2</span>Запрос, кэш, деньги</a>
+  <a href="#ch3"><span class="n">3</span>Инструкции и память</a>
+  <a href="#ch4"><span class="n">4</span>Скиллы и команды</a>
+  <a href="#ch5"><span class="n">5</span>Сабагенты</a>
+  <a href="#ch6"><span class="n">6</span>Хуки</a>
+  <a href="#ch7"><span class="n">7</span>MCP</a>
+  <a href="#ch8"><span class="n">8</span>Настройки</a>
+  <a href="#ch9"><span class="n">9</span>Desktop и CLI</a>
+  <a href="#ch10"><span class="n">10</span>Harness</a>
+  <span class="grp">Часть 2. Проект</span>
+  <a href="#p1"><span class="n">11</span>Кто за что отвечает</a>
+  <a href="#p2"><span class="n">12</span>Своя обвязка поверх командной</a>
+  <a href="#p3"><span class="n">13</span>Стоимость</a>
+  <a href="#p4"><span class="n">14</span>Как поддерживать обвязку</a>
+  <span class="grp">Часть 3. Решение</span>
+  <a href="#s1"><span class="n">15</span>Как не засорять сессию</a>
+  <a href="#s2"><span class="n">16</span>Какой клиент выбрать</a>
+</div></details></nav>
+
+<main>
+<header class="title">
+  <div class="main">
+    <span class="mono muted" style="font-size:12px">Claude Code изнутри</span>
+    <h1>Анатомия обвязки агента</h1>
+    <p class="lead">Как Claude Code собирает сессию из инструкций, скиллов, хуков и MCP, сколько это стоит и как собирать свое. Пример - рабочее монорепо на Kotlin Multiplatform: команда ведет в нем общую обвязку, а каждый добавляет поверх нее свою.</p>
+    <p class="muted" style="font-size:14px">Каждый лист начинается с определений новых терминов. Листы 1-10 объясняют механику: схема, спецификация и примечания с граблями. Листы 11-14 показывают, как применить ее в проекте. Листы 15-16 помогают выбрать, как работать самому.</p>
+  </div>
+  <div class="meta">
+    <div><span>Данные</span>139 сессий одного разработчика, 19.06-28.09.2026 (около 3 месяцев)</div>
+    <div><span>Источники</span>документация Claude Code, замеры /context и claude -p</div>
+    <div><span>Цены</span>прайс Anthropic API на 24.06.2026</div>
+    <div><span>Листов</span>16</div>
+  </div>
+</header>
+
+<!-- ========== 1 ========== -->
+<section class="sheet" id="ch1">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">1</span></div><div><span class="lbl">механика</span><span class="ttl">Как агент получает контекст</span></div><div class="src">основа</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Модель</dt><dd>Нейросеть (Claude), которая получает текст и возвращает текст. Сама ничего не делает и ничего не хранит.</dd><dt>Агент</dt><dd>Программа вокруг модели, здесь это Claude Code. Собирает запросы, выполняет инструменты, которые просит модель, и крутит цикл до конца хода.</dd><dt>Запрос</dt><dd>Один вызов модели: весь текст отправлен разом, один ответ получен.</dd><dt>Контекст</dt><dd>Весь текст одного запроса. Его размер ограничен окном контекста.</dd><dt>Токен</dt><dd>Единица, которой модель считает текст, обычно кусок слова. В английском один токен покрывает в среднем около 4 символов, в русском меньше. Поэтому тот же текст по-русски занимает больше токенов и стоит дороже.</dd><dt>Окно контекста</dt><dd>Максимальный объем одного запроса в токенах. Все, что не влезло, модель не видит. У Opus 5.5 это 1 млн токенов. Когда сессия подходит к пределу, Claude Code сжимает переписку.</dd></dl>
+  <div class="body">
+    <p>Все, что называется обвязкой, - это способы собрать текст, который уходит модели на каждом шаге. Запрос - это один вызов модели: Claude Code отправляет ей весь текст разом, модель возвращает один ответ, текст или вызов инструмента. Атомарен один запрос: текст ушел - ответ пришел. Твоя реплика не атомарна, это цикл из нескольких запросов. Модель просит инструмент, Claude Code его выполняет и отправляет новый запрос с результатом, и так, пока модель не ответит без инструментов. Каждый шаг сразу меняет файлы: если прервать ход на середине, сделанные правки останутся.</p>
+    <div class="fig">
+      <span class="cap"><b>рис. 1.1</b> реплика "поправь опечатку в README" - три запроса</span>
+      <div class="col">
+        <div class="box"><span class="t">запрос 1</span><span class="s">системный промпт, инструменты, инструкции, твое сообщение -> модель: вызвать Read для README.md</span></div>
+        <div class="box ghost"><span class="t">Claude Code читает файл сам</span><span class="s">модель в этом не участвует</span></div>
+        <div class="box"><span class="t">запрос 2</span><span class="s">все из запроса 1 + вызов Read + содержимое файла -> модель: вызвать Edit</span></div>
+        <div class="box"><span class="t">запрос 3</span><span class="s">все предыдущее + результат Edit -> модель: "Готово"</span></div>
+      </div>
+      <div class="dim">каждый следующий запрос заново включает в себя все, что было до него; модель не помнит запрос 1, его отправляют ей снова</div>
+    </div>
+    <div class="fig">
+      <span class="cap"><b>рис. 1.2</b> из чего состоит стартовый запрос в монорепо, тысячи токенов</span>
+      <div class="stackbar" role="img" aria-label="Стартовый запрос: системный промпт 3.3k, инструменты 10k, инструкции 22.5k, скиллы 10k, надбавка Desktop 20-30k">
+        <div style="flex:3.3" title="системный промпт">промпт 3.3</div>
+        <div style="flex:10">инструменты 10</div>
+        <div style="flex:22.5;background:var(--blue-soft)">инструкции и память 22.5</div>
+        <div style="flex:10">скиллы 10</div>
+        <div style="flex:30;background:var(--gray-soft);color:var(--muted)">Desktop +20-30</div>
+      </div>
+      <div class="dim">CLI около 60k / Desktop около 91k / медиана по сессиям примера 76k</div>
+      <div class="row">
+        <div class="box ghost" style="flex:1"><span class="t">вне запроса</span><span class="s">120k отложенных схем MCP и редких инструментов. Подгружаются, только когда нужны</span></div>
+      </div>
+    </div>
+    <p><b>Постоянный контекст</b> - это часть запроса, которая от шага к шагу не меняется: системный промпт, инструменты, инструкции, листинг скиллов и память. Меняется только переписка.</p>
+    <table class="spec">
+      <tr><th>Следствие 1</th><td><b>Постоянный контекст входит в каждый запрос.</b> CLAUDE.md не загружается в модель один раз на старте. Его текст заново включается в каждый запрос сессии, а запросов за сессию набираются десятки. Поэтому в постоянный контекст стоит класть только то, что нужно почти всегда.</td></tr>
+      <tr><th>Следствие 2</th><td><b>Одинаковое начало не обрабатывается заново.</b> Если начало запроса совпадает с предыдущим, оно берется из кэша. Это и делает большой постоянный контекст терпимым, пока его не ломают сменой модели, правкой начала или долгой паузой. Подробности и деньги - на листе 2.</td></tr>
+      <tr><th>Следствие 3</th><td><b>Окно одно на всех.</b> Инструкции, скиллы и переписка делят одно окно контекста с самой работой. Чем больше занимает постоянный контекст, тем раньше Claude Code сожмет переписку и тем больше подробностей из начала сессии потеряется.</td></tr>
+    </table>
+    <div class="notes"><div class="note"><span class="m i">проверка</span><p>Набери <code>/context</code> в любой сессии: увидишь те же слои для текущего момента. Сравни в начале и через час работы.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 2 ========== -->
+<section class="sheet" id="ch2">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">2</span></div><div><span class="lbl">механика</span><span class="ttl">Запрос, кэш и деньги</span></div><div class="src">prompt caching</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Кэш промпта</dt><dd>Сохраненное у провайдера начало запроса. Если следующий запрос начинается так же, это начало не обрабатывается заново.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 2.1</b> кэш работает по префиксу</span>
+      <div class="row" style="flex-wrap:nowrap">
+        <div class="box hl" style="flex:1"><span class="t">инструменты</span><span class="s">кэш</span></div>
+        <div class="box hl" style="flex:1.4"><span class="t">системный промпт + инструкции</span><span class="s">кэш</span></div>
+        <div class="box hl" style="flex:2.4"><span class="t">переписка, шаги 1..N</span><span class="s">кэш, $0.20 за млн токенов (Opus 5.5, цены на 24.06.2026)</span></div>
+        <div class="box warn" style="flex:.8"><span class="t">шаг N+1</span><span class="s">новое, запись</span></div>
+      </div>
+      <div class="dim">кэш действует до первого отличия: все после измененного места обрабатывается заново по полной цене. Когда начало меняется - в таблице ниже</div>
+    </div>
+    <div class="kpis">
+      <div><div class="k">$4 736</div><div class="d">API-эквивалент всех сессий, 19.06-28.09</div></div>
+      <div><div class="k">$8</div><div class="d">медианная сессия; p90 $73, максимум $744</div></div>
+      <div><div class="k">97.6%</div><div class="d">входных токенов пришли из кэша</div></div>
+      <div><div class="k">4.1 млрд</div><div class="d">прочитано из кэша против 11 млн токенов ответов</div></div>
+    </div>
+    <div class="fig">
+      <span class="cap"><b>рис. 2.2</b> прочитано из кэша за сессию, медиана по длине сессии</span>
+      <div class="hbars" id="lenbars"></div>
+      <span class="cap">каждый запрос перечитывает всю сессию, поэтому стоимость растет примерно как квадрат числа запросов</span>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Запрос собирается в порядке: инструменты, системный промпт, переписка. Совпало начало - начало читается из кэша.</td></tr>
+      <tr><th>В монорепо</th><td>Кэш включен всегда. На подписке Claude Code пишет его на 1 час, на API-ключе на 5 минут. Час на API-ключе включается настройкой <code>promptCacheTtl</code>.</td></tr>
+      <tr><th>Сколько стоит</th><td>Opus 5.5, цены на 24.06.2026: вход $4 за млн, выход $20, чтение кэша $0.20, запись на час $8. Чтение кэша - 61% расходов примера, запись - 30%, ответы - 9%.</td></tr>
+      <tr><th>Как управлять</th><td>Одна задача - одна сессия, между задачами <code>/clear</code>. Не менять модель и effort посреди работы. Читать много - через сабагента.</td></tr>
+    </table>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Что ломает кэш</th><th>Последствие</th></tr></thead>
+      <tbody>
+        <tr><td>Смена модели посреди сессии</td><td>Вся переписка перечитывается и перезаписывается по полной цене</td></tr>
+        <tr><td>Смена effort</td><td>То же. Исключение - Opus 5.5 и Fable 5.1 на подписке</td></tr>
+        <tr><td><code>/compact</code> и автосжатие</td><td>Слой переписки строится заново, но короче</td></tr>
+        <tr><td>Подключение MCP, чьи тулы грузятся сразу</td><td>Меняется префикс с инструментами. Отложенные не влияют</td></tr>
+        <tr><td>Пауза больше TTL</td><td>Кэш истек, следующий запрос пишет все заново</td></tr>
+        <tr><td>Правка CLAUDE.md посреди сессии</td><td>Не ломает: применится только после <code>/clear</code> или перезапуска</td></tr>
+      </tbody>
+    </table></div>
+    <div class="notes"><div class="note"><span class="m">примечание</span><p>Деньги здесь - API-эквивалент. На подписке платишь фиксированно, а токены съедают лимиты плана. При оплате по API-ключу эти цифры были бы счетом.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 3 ========== -->
+<section class="sheet" id="ch3">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">3</span></div><div><span class="lbl">механика</span><span class="ttl">Инструкции и память</span></div><div class="src">CLAUDE.md, AGENTS.md</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Инструкции</dt><dd>Постоянные правила для агента в markdown-файлах. Попадают в каждый запрос как часть постоянного контекста.</dd><dt>CLAUDE.md</dt><dd>Файл инструкций, который Claude Code находит сам: в домашней папке, в корне проекта, в каталогах выше по дереву и лениво во вложенных.</dd><dt>AGENTS.md</dt><dd>Тот же по смыслу файл, но по общему стандарту для разных агентов (Cursor, Codex и других). Claude Code читает его сам, но по умолчанию только если рядом нет CLAUDE.md и CLAUDE.local.md. Иначе его подключают строкой <code>@AGENTS.md</code> в CLAUDE.md или настройкой Project instructions = <code>claude-md-and-agents-md</code>.</dd><dt>Импорт</dt><dd>Строка <code>@путь</code> в файле инструкций, на место которой встает содержимое другого файла.</dd><dt>Память</dt><dd>Заметки, которые агент сам ведет между сессиями в отдельной папке. В каждый запрос попадает только их индекс MEMORY.md, сами заметки агент читает, когда они нужны.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 3.1</b> два мира инструкций: друг друга не видят</span>
+      <div class="row">
+        <div class="col" style="flex:1;min-width:220px">
+          <div class="box"><span class="t">чаты claude.ai, Desktop, Cowork</span><span class="s">Settings / Account / Instructions for Claude, имя, память чатов</span></div>
+        </div>
+        <div class="arr">не видят друг друга</div>
+        <div class="col" style="flex:1;min-width:220px">
+          <div class="box"><span class="t">Claude Code: Code в Desktop и CLI</span><span class="s">~/.claude/CLAUDE.md, CLAUDE.md и CLAUDE.local.md, память проекта</span></div>
+        </div>
+      </div>
+      <div class="dim">один текст надо класть в оба места. Скиллы из Customize, наоборот, приходят в Code: и в Desktop, и в CLI</div>
+    </div>
+    <div class="fig">
+      <span class="cap"><b>рис. 3.2</b> порядок загрузки сессии</span>
+      <div class="col">
+        <div class="box"><span class="t">[1] настройки</span><span class="s">managed > --settings > settings.local.json > settings.json > ~/.claude/settings.json</span></div>
+        <div class="v-arr" aria-hidden="true"></div>
+        <div class="box hl"><span class="t">[2] инструкции <span class="tag">22.5k</span></span><span class="s">~/.claude/CLAUDE.md 1.8k / AGENTS.md 11.3k / CLAUDE.local.md 4.7k / MEMORY.md 3.7k</span></div>
+        <div class="v-arr" aria-hidden="true"></div>
+        <div class="box"><span class="t">[3] листинги</span><span class="s">описания скиллов, агентов, команд; имена отложенных MCP</span></div>
+        <div class="v-arr" aria-hidden="true"></div>
+        <div class="box warn"><span class="t">[4] инструкции зафиксированы</span><span class="s">правки CLAUDE.md и файлы, появившиеся позже, заработают только в новой сессии или после /clear</span></div>
+        <div class="v-arr" aria-hidden="true"></div>
+        <div class="box ghost"><span class="t">[5] по ходу работы</span><span class="s">вложенные CLAUDE.md, тело SKILL.md, схемы MCP</span></div>
+      </div>
+    </div>
+    <div class="fig">
+      <span class="cap"><b>табл. 3.1</b> что переживает <code>/clear</code></span>
+      <div class="tbl-wrap"><table class="t">
+        <thead><tr><th>Остается</th><th>Пропадает</th></tr></thead>
+        <tbody>
+          <tr><td>Инструкции: перечитываются заново, свежие правки подхватываются</td><td>Вся переписка: договоренности, выводы, прочитанные файлы</td></tr>
+          <tr><td>Память: файлы не трогаются</td><td>План и решения, если они не записаны в файл или память</td></tr>
+          <tr><td>Скиллы, настройки, MCP</td><td>Все, что модель держала в голове по ходу сессии</td></tr>
+          <tr><td>Файлы на диске и git</td><td></td></tr>
+        </tbody>
+      </table></div>
+      <p><code>/compact</code> мягче: он заменяет переписку кратким пересказом. <code>/clear</code> выбрасывает ее целиком. Новая сессия равна <code>/clear</code>.</p>
+      <div class="notes"><div class="note"><span class="m i">правило</span><p>Перед <code>/clear</code> или закрытием сессии попроси агента записать важное в память или в файл плана. Иначе ощущение "оторвало половину памяти" гарантировано: в памяти лежит только то, что агент успел записать.</p></div></div>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>На старте грузятся CLAUDE.md пользователя, проекта, CLAUDE.local.md и все CLAUDE.md выше по дереву каталогов. Вложенные подгружаются лениво, когда агент читает файл в их каталоге. <code>@путь</code> вставляет другой файл.</td></tr>
+      <tr><th>В монорепо</th><td>Корневой <code>CLAUDE.md</code> - одна строка <code>@AGENTS.md</code>. AGENTS.md - правила команды. Глобальный файл - твой общий текст для чатов и кода, CLAUDE.local.md - правила только для этого репо.</td></tr>
+      <tr><th>Сколько стоит</th><td>22.5k токенов в каждом запросе, около 1 млн прочитанных токенов на медианную сессию, $0.21 на Opus 5.5. Вложенный AGENTS.md одного модуля весит 88 KB и подгружался в 38 сессиях.</td></tr>
+      <tr><th>Как сделать свое</th><td>Как говорить в чатах - профиль claude.ai. Как работать во всех проектах Code - <code>~/.claude/CLAUDE.md</code>. Только этот репо - <code>CLAUDE.local.md</code>. Правило модуля - AGENTS.md в его каталоге. Факт, узнанный по ходу, - память.</td></tr>
+    </table>
+    <div class="notes">
+      <div class="note"><span class="m i">проверка</span><p>Спроси агента: перечисли пути всех загруженных файлов инструкций. Модель честно называет, что видит.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 4 ========== -->
+<section class="sheet" id="ch4">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">4</span></div><div><span class="lbl">механика</span><span class="ttl">Скиллы и команды</span></div><div class="src">SKILL.md</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Скилл</dt><dd>Именованная инструкция для конкретного случая: папка с SKILL.md и файлами рядом. В контексте постоянно висит только ее описание, тело подгружается при вызове.</dd><dt>Описание скилла</dt><dd>Одна-две фразы о том, когда его использовать. По ним модель решает, вызывать скилл или нет. Плохое описание - скилл не сработает, даже если тело хорошее.</dd><dt>Листинг скиллов</dt><dd>Список имен и описаний всех доступных скиллов. Входит в постоянный контекст каждого запроса.</dd><dt>Команда</dt><dd>Скилл, который ты вызываешь вручную: <code>/имя</code>. Раньше команды были отдельным механизмом, теперь это тот же скилл.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 4.1</b> что лежит в контексте всегда, а что по вызову</span>
+      <div class="row" style="align-items:center">
+        <div class="box hl" style="flex:1;min-width:200px"><span class="t">листинг <span class="tag">10k всегда</span></span><span class="s">имя + описание, 70-310 токенов на скилл, около 50 скиллов</span></div>
+        <div class="arr">-- вызов -></div>
+        <div class="box" style="flex:1;min-width:200px"><span class="t">тело SKILL.md <span class="tag">по вызову</span></span><span class="s">humanizer-ru 16 KB, autotest 51 KB, файлы рядом</span></div>
+      </div>
+      <div class="dim">описание - условие запуска: модель выбирает скилл по нему</div>
+    </div>
+    <pre class="code">---
+name: mr-review
+description: Use when the user asks to review a GitLab MR - "глянь MR", "отревьюй !12345".
+disable-model-invocation: false   # true: не висит в листинге, только /mr-review
+allowed-tools: Read, Bash         # что разрешено без вопроса внутри скилла
+---
+# тело: шаги, правила, ссылки на файлы рядом</pre>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Скилл - папка с <code>SKILL.md</code>. Вызывает его ты через <code>/имя</code> или модель, если описание подходит к задаче. Слэш-команды теперь тот же механизм.</td></tr>
+      <tr><th>В монорепо</th><td>39 проектных, 8 платформенных, 3 личных, плюс плагины Desktop. Вызывались 12 проектных. Из 202 вызовов почти все сделала модель, руками набрано 6.</td></tr>
+      <tr><th>Сколько стоит</th><td>Листинг - 10k в каждом запросе. Тело - только при вызове. Кириллица дороже в токенах, поэтому русские описания раздувают листинг.</td></tr>
+      <tr><th>Как сделать свое</th><td>Личный - <code>~/.claude/skills/имя/SKILL.md</code>. Для команды - исходники харнесса и MR. Для чатов - Customize, Skills.</td></tr>
+    </table>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Скилл</th><th>Откуда</th><th>Вызовов</th></tr></thead>
+      <tbody>
+        <tr><td>mr-review</td><td>личный</td><td class="num">43</td></tr>
+        <tr><td>commit, opening-mr, humanizer-ru</td><td>харнесс</td><td class="num">25 / 22 / 21</td></tr>
+        <tr><td>creating-branch, work, run-ios-app</td><td>харнесс</td><td class="num">18 / 18 / 16</td></tr>
+        <tr><td>writing-plans, using-figma и еще 5</td><td>харнесс</td><td class="num">1-8</td></tr>
+        <tr><td>19 проектных и 8 платформенных</td><td>харнесс</td><td class="num">0</td></tr>
+      </tbody>
+    </table></div>
+    <div class="notes">
+      <div class="note"><span class="m">примечание</span><p>Два скилла с похожими описаниями конкурируют, и модель выбирает сама. Скилл, который не вызывается, почти всегда страдает от описания, а не от тела.</p></div>
+      <div class="note"><span class="m i">проверка</span><p><code>claude -p "глянь MR !123"</code> в пустой сессии и посмотри, какой скилл модель вызвала. Так тестируют описание, не трогая тело.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 5 ========== -->
+<section class="sheet" id="ch5">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">5</span></div><div><span class="lbl">механика</span><span class="ttl">Сабагенты</span></div><div class="src">.claude/agents</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Сабагент</dt><dd>Отдельный агент со своим контекстом. Основной агент поручает ему часть работы и получает назад только итоговый отчет. Все, что сабагент прочитал по дороге, остается у него.</dd><dt>Основной агент</dt><dd>Агент твоей сессии. Ставит сабагенту задачу и получает от него отчет.</dd><dt>Отчет</dt><dd>Последнее сообщение сабагента. Только оно попадает в контекст основного агента.</dd><dt>Тип сабагента</dt><dd>Заготовка с промптом, набором инструментов и моделью. Бывают встроенные (Explore, general-purpose, Plan) и свои, из <code>.claude/agents/</code>.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 5.1</b> отдельный контекст, наружу только отчет</span>
+      <div class="row" style="align-items:center">
+        <div class="box" style="flex:1;min-width:180px"><span class="t">основная сессия</span><span class="s">задание: что найти и зачем</span></div>
+        <div class="arr">-></div>
+        <div class="box hl" style="flex:1.3;min-width:200px"><span class="t">сабагент</span><span class="s">свой промпт, CLAUDE.md, git status; читает 100k</span></div>
+        <div class="arr">-></div>
+        <div class="box ok" style="flex:1;min-width:160px"><span class="t">отчет 3k</span><span class="s">в основной контекст</span></div>
+      </div>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Историю твоей сессии сабагент не видит. Возвращает только итоговый отчет, все прочитанное по дороге остается у него.</td></tr>
+      <tr><th>В монорепо</th><td>Explore 58 раз, general-purpose 51, <code>coder</code> из харнесса 36, <code>code-reviewer</code> 5.</td></tr>
+      <tr><th>Сколько стоит</th><td>Все сабагенты за три месяца - $167, 3.5% от общего. Дешево, потому что их сессии короткие, а основная не раздувается.</td></tr>
+      <tr><th>Как сделать свое</th><td><code>~/.claude/agents/имя.md</code>: фронтматтер <code>name</code>, <code>description</code>, <code>tools</code>, <code>model</code>, в теле промпт. Модель попроще для черновой работы - прямая экономия.</td></tr>
+    </table>
+    <div class="notes"><div class="note"><span class="m">примечание</span><p>Сабагент не видит твою переписку с основным агентом. Все, о чем вы договорились, основной агент должен сам передать в задании - тексте, с которым он запускает сабагента. Если ограничение важно, прямо попроси включить его в задание.</p></div><div class="note"><span class="m">примечание</span><p>Отчет сабагента - это вывод модели, а не проверенный факт. Ключевые утверждения из него стоит перепроверить.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 6 ========== -->
+<section class="sheet" id="ch6">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">6</span></div><div><span class="lbl">механика</span><span class="ttl">Хуки</span></div><div class="src">settings.json / hooks</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Хук</dt><dd>Скрипт, который Claude Code запускает сам, когда в сессии происходит событие. Модель в этом не участвует, поэтому хук срабатывает всегда. На вход скрипт получает описание события, в ответ может добавить текст в контекст или запретить действие.</dd><dt>Событие</dt><dd>Момент в жизни сессии, к которому можно привязать хук: старт сессии, отправка сообщения, до и после вызова инструмента, конец хода и другие.</dd><dt>additionalContext</dt><dd>Текст, который хук возвращает Claude Code, чтобы тот добавил его в контекст модели.</dd><dt>Шим</dt><dd>Файл-переходник: CLAUDE.md из одной строки <code>@AGENTS.md</code> рядом с AGENTS.md. Нужен, потому что при корневом CLAUDE.md Claude Code по умолчанию AGENTS.md не читает. С настройкой Project instructions = <code>claude-md-and-agents-md</code> шимы не нужны.</dd><dt>Блокирующий хук</dt><dd>Хук, который завершается с кодом 2 и этим запрещает действие, например вызов инструмента.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 6.1</b> где в сессии можно повесить хук</span>
+      <span class="cap">один раз за сессию</span>
+      <div class="box hl"><span class="t">SessionStart</span><span class="s">пример: подготовить окружение</span></div>
+      <div class="v-arr" aria-hidden="true"></div>
+      <span class="cap">на каждое твое сообщение</span>
+      <div class="col">
+        <div class="box"><span class="t">UserPromptSubmit</span><span class="s">пример: добавить в контекст напоминание</span></div>
+        <div class="v-arr" aria-hidden="true"></div>
+        <div class="col" style="border:1px dashed var(--line-strong);padding:10px">
+          <span class="cap">цикл: повторяется на каждый вызов инструмента</span>
+          <div class="box"><span class="t">PreToolUse</span><span class="s">пример: запретить опасную команду</span></div>
+          <div class="v-arr" aria-hidden="true"></div>
+          <div class="box"><span class="t">PostToolUse</span><span class="s">пример: отформатировать измененный файл</span></div>
+          <span class="cap" style="text-align:right">нужен еще инструмент -&gt; снова PreToolUse</span>
+        </div>
+        <div class="v-arr" aria-hidden="true"></div>
+        <div class="box"><span class="t">Stop - модель закончила ход</span><span class="s">пример: напомнить про тесты</span></div>
+      </div>
+      <div class="dim">есть и другие события: перед сжатием переписки, при создании worktree, в конце сессии</div>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Скрипт получает описание события в JSON: что за событие, какой инструмент, с какими параметрами. Может вернуть текст для контекста через <code>additionalContext</code> или запретить действие кодом выхода 2. Это единственный способ сделать что-то гарантированно, а не по просьбе к модели.</td></tr>
+      <tr><th>В монорепо</th><td>Хуки на старте сессии решают две задачи. Раскладывают шимы: рядом с каждым AGENTS.md кладут CLAUDE.md из одной строки <code>@AGENTS.md</code>, потому что при корневом CLAUDE.md Claude Code по умолчанию AGENTS.md не читает. Проверяют, не вышла ли новая версия командного харнесса.</td></tr>
+      <tr><th>Сколько стоит</th><td>Токенов не тратит, платишь только за добавленный текст. Время - сколько работает скрипт: хук на старте задерживает начало сессии.</td></tr>
+      <tr><th>Как сделать свое</th><td>Скрипт в <code>~/.claude/hooks/</code>, регистрация в <code>hooks</code> файла настроек, ответ - JSON с <code>hookSpecificOutput</code>.</td></tr>
+    </table>
+    <div class="notes">
+      <div class="note"><span class="m">примечание</span><p>В auto mode агент не может сам менять собственные настройки, поэтому зарегистрировать хук приходится вручную. Это защита, а не баг.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 7 ========== -->
+<section class="sheet" id="ch7">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">7</span></div><div><span class="lbl">механика</span><span class="ttl">MCP</span></div><div class="src">~/.claude.json, .mcp.json</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>MCP</dt><dd>Model Context Protocol - открытый протокол, по которому агент подключает внешние инструменты: трекер, GitLab, Figma и другие.</dd><dt>MCP-сервер</dt><dd>Программа, которая по этому протоколу отдает агенту набор инструментов. Работает как процесс на машине (stdio) или как удаленный адрес (http).</dd><dt>CLI</dt><dd>Программа, которой управляют текстовыми командами в терминале. У многих сервисов есть своя CLI, например <code>glab</code> для GitLab. Агент может вызывать ее вместо MCP-сервера.</dd><dt>Коннектор</dt><dd>MCP-сервер, подключенный в аккаунте claude.ai. В Desktop он появляется автоматически.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 7.1</b> отложенная загрузка: в запросе только имена</span>
+      <div class="row" style="align-items:center">
+        <div class="box hl" style="flex:1;min-width:190px"><span class="t">в запросе</span><span class="s">имена инструментов, 0.7k</span></div>
+        <div class="arr">-- ToolSearch -></div>
+        <div class="col" style="flex:1.4;min-width:220px">
+          <div class="box ghost"><span class="t">gitlab <span class="tag">43k</span></span></div>
+          <div class="box ghost"><span class="t">Figma <span class="tag">33k</span></span></div>
+          <div class="box ghost"><span class="t">Gmail <span class="tag">24k</span></span></div>
+        </div>
+      </div>
+      <div class="dim">без отложенной загрузки это +100k в каждом запросе</div>
+      <dl class="defs" style="border:1px solid var(--line);">
+        <dt>инструмент</dt><dd>Одна операция сервера: найти задачу, создать MR, прочитать макет.</dd>
+        <dt>отложенная загрузка</dt><dd>В запросе лежат только имена инструментов. Полное описание модель подгружает через ToolSearch, когда инструмент понадобился.</dd>
+      </dl>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Внешний сервер с инструментами: процесс на машине (stdio) или адрес (http). Ответ MCP-инструмента ограничен 25k токенов, лимит меняется переменной <code>MAX_MCP_OUTPUT_TOKENS</code>. Ответ остается в переписке и входит в каждый следующий запрос, поэтому один огромный ответ съел бы окно контекста.</td></tr>
+      <tr><th>В монорепо</th><td>MCP-серверы приходят из нескольких мест: личные в <code>~/.claude.json</code>, командные в <code>.mcp.json</code>, из конфига Desktop и коннекторы claude.ai. Поэтому один сервер легко оказывается объявлен дважды.</td></tr>
+      <tr><th>Сколько стоит</th><td>Имена почти бесплатны, схемы - только подгруженные. Если у сервиса есть CLI, например <code>glab</code>, он часто выгоднее MCP: не тратит контекст на схемы и выдает ровно нужный вывод.</td></tr>
+      <tr><th>Как сделать свое</th><td><code>claude mcp add --scope user имя -- команда</code> для всех проектов, <code>--scope project</code> - в <code>.mcp.json</code> для команды.</td></tr>
+    </table>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Приоритет при одинаковом имени</th><th>Где хранится</th></tr></thead>
+      <tbody>
+        <tr><td>1. local</td><td><code>~/.claude.json</code> в записи проекта</td></tr>
+        <tr><td>2. project</td><td><code>.mcp.json</code> в репо, требует одобрения</td></tr>
+        <tr><td>3. user</td><td><code>~/.claude.json</code> верхнего уровня</td></tr>
+        <tr><td>4-5. плагины и коннекторы claude.ai</td><td>плагины Claude Code и аккаунт claude.ai</td></tr>
+      </tbody>
+    </table></div>
+    <div class="notes"><div class="note"><span class="m">примечание</span><p>Запись берется целиком из источника с высшим приоритетом, поля не сливаются. MCP из конфига Desktop не видны ни CLI, ни харнессу.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 8 ========== -->
+<section class="sheet" id="ch8">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">8</span></div><div><span class="lbl">механика</span><span class="ttl">Настройки и разрешения</span></div><div class="src">settings*.json</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Настройки</dt><dd>JSON-файлы <code>settings.json</code> с уровнями от организации до пользователя. В них хранятся разрешения, хуки, переменные окружения, модель и effort. В контекст модели они не попадают, их читает сам Claude Code.</dd><dt>Правило разрешения</dt><dd>Шаблон инструмента с решением <code>allow</code> (выполнять молча), <code>ask</code> (спросить) или <code>deny</code> (запретить). Пример шаблона: <code>Bash(git log *)</code>.</dd><dt>Режим разрешений</dt><dd>Как поступать с тем, что правила не покрыли: спросить человека (default), пропускать правки файлов (acceptEdits), только планировать (plan), отдать решение модели-классификатору (auto).</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 8.1</b> кто сильнее: сверху вниз</span>
+      <div class="col">
+        <div class="box"><span class="t">managed</span><span class="s">организация, пользователь не переопределит</span></div>
+        <div class="box"><span class="t">--settings</span><span class="s">флаг запуска, одна сессия</span></div>
+        <div class="box"><span class="t">.claude/settings.local.json</span><span class="s">личное для репозитория, в git не идет</span></div>
+        <div class="box"><span class="t">.claude/settings.json</span><span class="s">общее для команды, лежит в git</span></div>
+        <div class="box"><span class="t">~/.claude/settings.json</span><span class="s">личное для всех проектов</span></div>
+      </div>
+      <p class="fig-note">Так решается спор за одиночный ключ вроде model. Правила разрешений не спорят: они собираются со всех уровней, и deny на любом уровне сильнее allow на любом другом.</p>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Правила проверяются по порядку: сначала deny, потом ask, потом allow. Первое совпадение решает. Что не совпало ни с одним правилом, решает режим разрешений: в обычном агент спросит, в auto проверит модель-классификатор.</td></tr>
+      <tr><th>Сколько стоит</th><td>Токенов не стоит. Стоит внимания: каждое лишнее разрешение - пропущенный вопрос в момент, когда он был бы нужен.</td></tr>
+      <tr><th>Как сделать свое</th><td>Звездочку ставь только после подкоманды: <code>Bash(git log *)</code>. Запись наружу (push, комментарии, переходы в трекере) держи в ask, если нет уверенности.</td></tr>
+    </table>
+    <div class="notes"><div class="note"><span class="m">примечание</span><p>Свои правила добавляйте в <code>.claude/settings.local.json</code> в корне репозитория. Этот файл личный и в git не попадает. Правила на все проекты кладите в <code>~/.claude/settings.json</code>.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 9 ========== -->
+<section class="sheet" id="ch9">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">9</span></div><div><span class="lbl">механика</span><span class="ttl">Desktop и CLI</span></div><div class="src">один движок</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Claude Desktop</dt><dd>Приложение Claude для macOS и Windows. Во вкладке Code работает тот же Claude Code, только с окнами, панелями и встроенным браузером.</dd><dt>Claude Code CLI</dt><dd>Claude Code, запущенный в терминале командой <code>claude</code>.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 9.1</b> общее ядро и края</span>
+      <div class="row" style="align-items:stretch">
+        <div class="box" style="flex:1;min-width:190px"><span class="t">только Desktop</span><span class="s">worktree в .claude/worktrees, MCP из конфига Desktop, свои инструменты (браузер, панели, управление сессиями)</span></div>
+        <div class="box hl" style="flex:1.2;min-width:210px"><span class="t">общий движок</span><span class="s">цикл агента, инструменты, CLAUDE.md, скиллы, хуки, настройки, память</span></div>
+        <div class="box" style="flex:1;min-width:190px"><span class="t">только CLI</span><span class="s">-p для скриптов и автоматизации, команды-диалоги /mcp, /permissions, /config</span></div>
+      </div>
+    </div>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Что</th><th>Desktop</th><th>CLI</th><th>Чем грозит</th></tr></thead>
+      <tbody>
+        <tr><td>Стартовый контекст</td><td>около 91k</td><td>около 60k</td><td>Desktop дороже на 20-30k в каждом запросе: он добавляет свои инструменты</td></tr>
+        <tr><td>Worktree</td><td><code>.claude/worktrees/</code>, ветка <code>claude/*</code>, копирует <code>.worktreeinclude</code></td><td><code>--worktree</code> или вручную</td><td>Имя ветки может не пройти правила CI. Сгенерированных файлов обвязки в свежем worktree нет</td></tr>
+        <tr><td>MCP</td><td>плюс конфиг Desktop</td><td><code>~/.claude.json</code>, <code>.mcp.json</code>, коннекторы claude.ai</td><td>Сервер из конфига Desktop в CLI не виден</td></tr>
+        <tr><td>Терминальные команды</td><td>недоступны</td><td>есть</td><td>Инструкции вида &quot;запусти <code>/mcp</code>&quot; в Desktop не выполнить</td></tr>
+      </tbody>
+    </table></div>
+    <div class="notes"><div class="note"><span class="m i">вывод</span><p>Различие Desktop и CLI не в движке, а в окружении: где создаются worktree, откуда берутся MCP, какие команды доступны. Командная обвязка обычно пишется под CLI, поэтому в Desktop эти места приходится закрывать своими настройками.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 10 ========== -->
+<section class="sheet" id="ch10">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">10</span></div><div><span class="lbl">механика</span><span class="ttl">Harness</span></div><div class="src">harness sync</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Харнесс</dt><dd>Командная обвязка агента, которая лежит в git: скиллы, команды, сабагенты, хуки, MCP и инструкции. Утилита харнесса собирает из этих исходников рабочие файлы под каждого агента.</dd><dt>Рантайм</dt><dd>То, что утилита собрала на конкретной машине. В git он не коммитится.</dd></dl>
+  <div class="body">
+    <p>Инструкции, скиллы, хуки и MCP с листов 1-9 можно настроить руками, каждый у себя. Харнесс избавляет от этого: исходники обвязки лежат в git, а <code>sync</code> собирает из них рабочие файлы под каждого агента на каждой машине.</p>
+    <div class="fig">
+      <span class="cap"><b>рис. 10.1</b> из чего собирается рантайм</span>
+      <div class="row" style="align-items:center">
+        <div class="col" style="flex:1;min-width:200px">
+          <div class="box"><span class="t">исходники в git</span><span class="s">конфиг, скиллы, сабагенты, команды</span></div>
+          <div class="box"><span class="t">релиз харнесса</span><span class="s">общие скиллы и хуки</span></div>
+          <div class="box"><span class="t">локальный конфиг</span><span class="s">роль и логин</span></div>
+        </div>
+        <div class="arr">-></div>
+        <div class="box hl" style="min-width:120px"><span class="t">harness sync</span></div>
+        <div class="arr">-></div>
+        <div class="col" style="flex:1;min-width:200px">
+          <div class="box"><span class="t">общий пул</span><span class="s">-> .claude .cursor .opencode .zcode</span></div>
+          <div class="box"><span class="t">мануал харнесса</span></div>
+          <div class="box"><span class="t">хуки и .mcp.json</span></div>
+        </div>
+      </div>
+    </div>
+    <table class="spec">
+      <tr><th>Как работает</th><td>Рантайм в git не коммитится, поэтому в свежем клоне и новом worktree его нет, пока не запущен sync. Скиллы можно фильтровать по ролям: разработчик, QA и другие получают разный набор. Корневой AGENTS.md пишет команда, а мануал харнесса подключается в него импортом первой строкой.</td></tr>
+      <tr><th>Где работает</th><td>Утилита и общие скиллы ставятся на машину, <code>sync</code> работает локально. Сеть нужна для обновления утилиты, телеметрии и удаленных MCP. Расход токенов зависит от того, сколько скиллов попало в листинг, а не от того, где лежит харнесс.</td></tr>
+      <tr><th>Сколько стоит</th><td>Листинг скиллов и инструкции харнесса входят в постоянный контекст каждого запроса. В разобранном примере это около 20k токенов, примерно половина стартовых инструкций.</td></tr>
+      <tr><th>Как сделать свое</th><td>Скилл для команды кладите в исходники харнесса и запускайте sync. Личное в командный харнесс не кладите: для него есть <code>~/.claude</code> и <code>CLAUDE.local.md</code>.</td></tr>
+      <tr><th>Альтернатива</th><td>В Claude Code штатный способ раздать обвязку - плагин: пакет из скиллов, команд, сабагентов, хуков и MCP. Он ставится из маркетплейса, а для всей команды включается записью в <code>.claude/settings.json</code>. Плагин - формат Anthropic, он работает в Claude Code, claude.ai и Cowork. Харнесс нужен, когда в команде агенты разных производителей.</td></tr>
+    </table>
+    <div class="notes"><div class="note"><span class="m">примечание</span><p><code>sync</code> может менять файлы, которые лежат в git, например при смене версии харнесса. Перед sync обновите ветку, иначе его правки смешаются с отставанием ветки.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 11 ========== -->
+<section class="sheet" id="p1">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">11</span></div><div><span class="lbl">проект</span><span class="ttl">Кто за что отвечает</span></div><div class="src">владельцы слоев</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Слой</dt><dd>Часть обвязки, у которой один владелец и один способ обновления.</dd></dl>
+  <div class="body">
+    <p>Обвязка собирается из слоев с разными владельцами. Свои слои правь сам, чужие меняй через их владельца: иначе следующее обновление сотрет правку.</p>
+    <div class="tbl-wrap"><table class="t">
+    <thead><tr><th>Слой</th><th>Владелец</th><th>Где</th><th>Как обновляется</th><th>Что делать</th></tr></thead>
+    <tbody>
+      <tr><td>Правила проекта</td><td>команда</td><td>корневой и вложенные AGENTS.md</td><td>MR</td><td>читать, править через MR</td></tr>
+      <tr><td>Скиллы, сабагенты, команды</td><td>команда</td><td><code>.harness/</code></td><td>MR, затем sync</td><td>брать как есть</td></tr>
+      <tr><td>Платформа харнесса</td><td>платформа</td><td>утилита, релиз</td><td>скрипт установки, sync</td><td>обновлять по напоминанию</td></tr>
+      <tr><td>Правила о тебе</td><td>ты</td><td>профиль claude.ai и <code>~/.claude/CLAUDE.md</code></td><td>руками, в оба места</td><td>держать одинаковыми</td></tr>
+      <tr><td>Правила для репозитория</td><td>ты</td><td><code>CLAUDE.local.md</code></td><td>руками</td><td>держать коротким</td></tr>
+      <tr><td>Разрешения</td><td>ты</td><td><code>.claude/settings.local.json</code></td><td>руками</td><td>ask для записи наружу</td></tr>
+      <tr><td>Личные скиллы</td><td>ты</td><td><code>~/.claude/skills/</code>, claude.ai</td><td>руками</td><td>только то, чего нет в командных</td></tr>
+      <tr><td>Окружение клиента</td><td>ты</td><td><code>~/.claude/settings.json</code>, хуки, конфиг Desktop</td><td>руками</td><td>закрывать то, что харнесс не делает для твоего клиента</td></tr>
+      <tr><td>Память</td><td>ты и агент</td><td><code>~/.claude/projects/.../memory</code></td><td>агент по ходу</td><td>просматривать и удалять устаревшее</td></tr>
+    </tbody>
+  </table></div>
+  </div>
+</section>
+
+<!-- ========== 12 ========== -->
+<section class="sheet" id="p2">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">12</span></div><div><span class="lbl">проект</span><span class="ttl">Своя обвязка поверх командной</span></div><div class="src">правило</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Личный слой</dt><dd>Свои правила, скиллы и настройки поверх командной обвязки.</dd><dt>Переопределение</dt><dd>Короткое правило в <code>CLAUDE.local.md</code>, которое меняет командное правило только для тебя. Пишется с причиной.</dd></dl>
+  <div class="body">
+    <p>Командную обвязку берешь целиком и не копируешь. Свою добавляешь поверх: коротко и только там, где команда не может или не должна.</p>
+    <div class="cols">
+      <div><h3>Брать у команды</h3><ul class="plain"><li>Правила проекта и архитектуры</li><li>Git-цикл: ветка, коммит, MR</li><li>Доменные скиллы: автотесты, дизайн-система</li><li>MCP, объявленный в харнессе</li></ul></div>
+      <div><h3>Держать своим</h3><ul class="plain"><li>Как агенту с тобой разговаривать и каким стилем писать тексты</li><li>Переопределения командных правил, коротко и с причиной</li><li>Настройки своего клиента, если харнесс его не покрывает: worktree, MCP вне харнесса</li><li>Свои скиллы, которых нет среди командных</li></ul></div>
+      <div><h3>Где будет конфликт</h3><ul class="plain"><li>Командная проверка после правок (тесты, линтер) против &quot;запускаю сам&quot;</li><li>Инструкции под CLI или другой клиент против твоего</li><li>Правила коммитов: подпись агента, язык, формат</li><li>Похожие скиллы, личный против командного: модель выбирает сама</li></ul></div>
+    </div>
+    <div class="notes"><div class="note"><span class="m i">правило</span><p>Не копируй командный скилл, чтобы подогнать под себя: копия разойдется с оригиналом на следующем релизе. Пиши короткое переопределение в <code>CLAUDE.local.md</code> с причиной. Команда добавила то же самое - удаляй свое. Если твое пригодится всем, предложи его в харнесс через MR.</p></div></div>
+  </div>
+</section>
+
+<!-- ========== 13 ========== -->
+<section class="sheet" id="p3">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">13</span></div><div><span class="lbl">проект</span><span class="ttl">Стоимость</span></div><div class="src">API-эквивалент</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>API-эквивалент</dt><dd>Сколько стоили бы те же токены по ценам API. На подписке это не счет, а мера расхода.</dd><dt>Usage credits</dt><dd>Оплата сверх лимита подписки по ценам API. Включаются по желанию.</dd><dt>Шлюз</dt><dd>Корпоративный прокси между Claude Code и моделью, задается в <code>ANTHROPIC_BASE_URL</code>.</dd><dt>opusplan</dt><dd>Один режим модели на всю сессию, внутри которого работают две модели. Пока включен plan mode, отвечает Opus: разбирает задачу и пишет план. Когда ты выходишь из plan mode и даешь добро на выполнение, сессия сама переключается на Sonnet, и он выполняет план. Переключает не модель, а твой вход и выход из plan mode. Fable в эту пару не подставить.</dd><dt>Advisor</dt><dd>Старшая модель на подхвате. Задачу ведет младшая и сама зовет старшую в трудный момент. Старшая читает переписку и отвечает подсказкой, но ничего не делает сама.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 13.1</b> куда ушли $4 736, 139 сессий, 19.06-28.09.2026</span>
+      <div class="stackbar" role="img" aria-label="Чтение кэша 61 процент, запись 30, ответы 9">
+        <div style="flex:60.9;background:var(--blue-soft)">чтение кэша $2 883 / 61%</div>
+        <div style="flex:30.1">запись $1 427 / 30%</div>
+        <div style="flex:8.9">ответы $423 / 9%</div>
+      </div>
+      <div class="dim">ответы модели, включая размышления, - всего 9%</div>
+    </div>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Рычаг</th><th>Что дает</th><th>Цена решения</th></tr></thead>
+      <tbody>
+        <tr><td>Короткие сессии, <code>/clear</code> между задачами</td><td>Самый сильный: сессии на 200+ запросов читают в 20-150 раз больше коротких</td><td>Контекст задачи переносить через память или план</td></tr>
+        <tr><td>Чтение через сабагентов</td><td>Основная сессия не раздувается</td><td>Отчет проверять</td></tr>
+        <tr><td>Не менять модель и effort посреди сессии</td><td>Нет полной перезаписи кэша</td><td>Нет</td></tr>
+        <tr><td>Резать постоянный контекст</td><td>Каждая 1k токенов умножается на число запросов в сессии, то есть на десятки</td><td>Правила должны остаться там, где нужны</td></tr>
+        <tr><td>План старшей моделью, выполнение младшей</td><td>Основной объем токенов идет по цене младшей модели</td><td><code>opusplan</code> сбрасывает кэш при каждом переключении. Дешевле записать план в файл и выполнить его в новой сессии. Advisor - экспериментальная альтернатива</td></tr>
+        <tr><td>CLI вместо Desktop для рутины</td><td>Минус 20-30k на запрос</td><td>Нет панелей и встроенного браузера</td></tr>
+      </tbody>
+    </table></div>
+    <div class="fig">
+      <span class="cap"><b>табл. 13.1</b> как разделить работу между моделями</span>
+      <div class="tbl-wrap"><table class="t">
+        <thead><tr><th>Способ</th><th>Как включить</th><th>Как работает</th><th>Цена и оговорки</th></tr></thead>
+        <tbody>
+          <tr><td><code>opusplan</code></td><td><code>/model opusplan</code></td><td>В plan mode отвечает Opus, при выполнении Sonnet</td><td>У каждой модели свой кэш: каждое переключение между планом и выполнением начинает кэш заново</td></tr>
+          <tr><td>Advisor</td><td><code>/advisor opus</code>, <code>--advisor opus</code> или <code>advisorModel</code> в настройках</td><td>Младшая модель сама решает, когда спросить старшую: перед выбором подхода, на повторяющейся ошибке, перед &quot;готово&quot;. Старшая модель получает всю переписку</td><td>Экспериментальная функция. Кэш основной модели не ломает, но каждый вызов старшая модель читает переписку заново по своему тарифу. Только Anthropic API, старшая модель не слабее основной</td></tr>
+          <tr><td>Сабагент на младшей модели</td><td>поле <code>model</code> у сабагента</td><td>Основная сессия остается на старшей модели, черновая работа уходит сабагенту</td><td>Кэш основной сессии не трогается. Отчет сабагента надо проверять</td></tr>
+          <tr><td>План в файл, выполнение в новой сессии</td><td>вручную</td><td>Старшая модель пишет план в файл, новая сессия на младшей модели его выполняет</td><td>Кэш начинается заново один раз. Старшей может быть любая модель, включая Fable. Официально как паттерн не описан</td></tr>
+        </tbody>
+      </table></div>
+      <span class="cap">пары для advisor: старшая модель не слабее основной</span>
+      <div class="tbl-wrap"><table class="t">
+        <thead><tr><th>Основная модель</th><th>Старшая модель</th></tr></thead>
+        <tbody>
+          <tr><td>Haiku 4.5</td><td>Fable, Opus, Sonnet</td></tr>
+          <tr><td>Sonnet 5.5 или 5</td><td>Fable, Opus 4.7 и новее, Sonnet 5 и новее</td></tr>
+          <tr><td>Opus 5.5 или 5</td><td>Fable, Opus 5 и новее</td></tr>
+          <tr><td>Fable 5.1</td><td>только Fable 5.1</td></tr>
+        </tbody>
+      </table></div>
+    </div>
+    <h3>Кто и как платит</h3>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Схема</th><th>Как платят</th><th>Кэш</th><th>Что важно</th></tr></thead>
+      <tbody>
+        <tr><td>Pro и Max, личная</td><td>фиксированно, сверх лимита usage credits по желанию</td><td>1 час</td><td>Лимиты окнами 5 часов и неделя</td></tr>
+        <tr><td>Team и Enterprise</td><td>места Standard (1.25x Pro) или Premium (6.25x Pro), общий лимит на чат, Code и Cowork; сверх него кредиты</td><td>1 час</td><td>Админка, отчеты по людям, у Enterprise API аналитики</td></tr>
+        <tr><td>Console, API-ключ</td><td>за каждый токен</td><td>5 минут, час настройкой <code>promptCacheTtl</code></td><td>Ровно те долларовые цифры, что выше</td></tr>
+        <tr><td>Bedrock, Vertex, Foundry</td><td>через облачный аккаунт компании</td><td>5 минут, час настройкой <code>promptCacheTtl</code></td><td>У старых моделей и Foundry в Azure нет отложенной загрузки MCP</td></tr>
+        <tr><td>Корпоративный шлюз</td><td><code>ANTHROPIC_BASE_URL</code> и <code>apiKeyHelper</code></td><td>зависит от шлюза</td><td>Для часового кэша шлюз должен пробрасывать заголовок <code>anthropic-beta</code> без изменений</td></tr>
+      </tbody>
+    </table></div>
+    <div class="notes">
+      <div class="note"><span class="m">примечание</span><p>Если в окружении задан <code>ANTHROPIC_API_KEY</code>, Claude Code берет его вместо подписки и списывает за токены. Проверка: <code>/status</code>.</p></div>
+      <div class="note"><span class="m">примечание</span><p>Где отложенной загрузки нет, 120k схем MCP попадут в каждый запрос. Старт вырастет с 76k примерно до 200k, и все цифры листа умножатся почти втрое.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ========== 14 ========== -->
+<section class="sheet" id="p4">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">14</span></div><div><span class="lbl">проект</span><span class="ttl">Как поддерживать обвязку</span></div><div class="src">обслуживание</div></div>
+  <div class="body"><div class="cols">
+    <div><h3>На каждую задачу</h3><ul class="plain"><li>Новая задача - новая сессия. Если задачи идут параллельно, у каждой свой worktree</li><li>Большую задачу планировать старшей моделью, план записать в файл, выполнять в новой сессии на модели попроще</li><li>Ветку назвать по правилам CI до первого пуша</li><li>Перед <code>/clear</code> или закрытием сессии записать важное в память или план</li><li>Длинную сессию закрывать, а не тянуть</li></ul></div>
+    <div><h3>После обновления основной ветки</h3><ul class="plain"><li>Сначала обновить свою ветку, потом <code>sync</code></li><li>Проверить установку, если у харнесса есть такая команда (<code>doctor</code>)</li><li>Новые скиллы и инструкции подхватятся в новой сессии или после <code>/clear</code></li></ul></div>
+    <div><h3>Время от времени</h3><ul class="plain"><li><code>/context</code>: не вырос ли постоянный контекст</li><li>Листинг скиллов: нет ли дублей личного и командного</li><li>Память: удалить устаревшее</li><li>Профиль claude.ai и <code>~/.claude/CLAUDE.md</code>: одинаковы ли</li><li><code>CLAUDE.local.md</code>: не дублирует ли то, что команда уже добавила в AGENTS.md</li><li>Обновить CLI сервисов, которые вызывает агент</li></ul></div>
+  </div></div>
+</section>
+
+<!-- ========== 15 ========== -->
+<section class="sheet" id="s1">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">15</span></div><div><span class="lbl">решение</span><span class="ttl">Как не засорять сессию</span></div><div class="src">/btw, сабагенты</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Побочный вопрос</dt><dd>Вопрос не по основной задаче: ответ нужен сейчас, но дальше в работе не понадобится.</dd></dl>
+  <div class="body">
+    <p>Каждый ответ остается в переписке и входит во все следующие запросы сессии. Побочный вопрос, заданный в основной сессии, оплачивается до ее конца и занимает окно контекста.</p>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Способ</th><th>Что делает</th><th>Где работает</th></tr></thead>
+      <tbody>
+        <tr><td><code>/btw</code> или <code>Cmd+;</code></td><td>Вопрос по сессии, ответ не попадает в историю</td><td>Desktop и CLI</td></tr>
+        <tr><td>Сабагент</td><td>Свой контекст, назад только отчет</td><td>везде</td></tr>
+        <tr><td><code>/subtask</code></td><td>Фоновый сабагент, который получает весь разговор</td><td>CLI</td></tr>
+        <tr><td><code>/branch</code></td><td>Копия разговора, переключаешься в нее</td><td>только CLI</td></tr>
+        <tr><td><code>/fork</code></td><td>Копия в фоновую сессию, ты остаешься здесь</td><td>только CLI</td></tr>
+        <tr><td>Новая сессия + план в файле</td><td>Чистый старт</td><td>везде</td></tr>
+      </tbody>
+    </table></div>
+  </div>
+</section>
+
+<!-- ========== 16 ========== -->
+<section class="sheet" id="s2">
+  <div class="stamp"><div><span class="lbl">лист</span><span class="no">16</span></div><div><span class="lbl">решение</span><span class="ttl">Какой клиент выбрать</span></div><div class="src">Desktop, CLI, Cursor</div></div>
+  <dl class="defs"><span class="h">определения</span><dt>Клиент</dt><dd>Программа, через которую работаешь с агентом: Desktop, CLI, Cursor.</dd></dl>
+  <div class="body">
+    <div class="fig">
+      <span class="cap"><b>рис. 16.1</b> схема выбора в два вопроса</span>
+      <div class="box hl"><span class="t">1. Как платишь?</span></div>
+      <div class="v-arr" aria-hidden="true"></div>
+      <div class="row">
+        <div class="box" style="flex:1;min-width:180px"><span class="t">API-ключ</span><span class="s">CLI. Desktop по ключу не работает</span></div>
+        <div class="box" style="flex:1;min-width:180px"><span class="t">подписка Claude</span><span class="s">Pro, Max, Team, Enterprise: Desktop или CLI</span></div>
+        <div class="box" style="flex:1;min-width:180px"><span class="t">подписка Cursor</span><span class="s">Cursor, Claude в нем по ценам API</span></div>
+      </div>
+      <div class="v-arr" aria-hidden="true"></div>
+      <div class="box hl"><span class="t">2. Как идет работа?</span></div>
+      <div class="v-arr" aria-hidden="true"></div>
+      <div class="row">
+        <div class="box" style="flex:1;min-width:200px"><span class="t">Desktop</span><span class="s">несколько задач параллельно, нужны диффы, браузер и превью</span></div>
+        <div class="box" style="flex:1;min-width:200px"><span class="t">CLI</span><span class="s">скрипты, CI, автоматизация, экономия контекста</span></div>
+      </div>
+      <div class="dim">обычно одно не исключает другое: движок и настройки у Desktop и CLI общие</div>
+    </div>
+    <div class="tbl-wrap"><table class="t">
+      <thead><tr><th></th><th>Desktop</th><th>CLI</th><th>Cursor</th></tr></thead>
+      <tbody>
+        <tr><td>Оплата</td><td>только подписка Claude</td><td>подписка или API-ключ</td><td>подписка Cursor или свой ключ</td></tr>
+        <tr><td>Движок</td><td>Claude Code</td><td>Claude Code</td><td>свой</td></tr>
+        <tr><td>Инструкции</td><td>CLAUDE.md, AGENTS.md</td><td>то же</td><td>AGENTS.md, <code>.cursor/rules</code></td></tr>
+        <tr><td>Скиллы, сабагенты</td><td>да</td><td>да</td><td>да, читает и <code>.claude/skills</code></td></tr>
+        <tr><td>Хуки</td><td>да</td><td>да</td><td>свои, <code>.cursor/hooks.json</code></td></tr>
+        <tr><td>MCP</td><td>плюс конфиг Desktop</td><td><code>~/.claude.json</code>, <code>.mcp.json</code>, коннекторы</td><td><code>.cursor/mcp.json</code></td></tr>
+        <tr><td>Стартовый контекст</td><td>около 91k</td><td>около 60k</td><td>не мерили</td></tr>
+        <tr><td>Сильное</td><td>параллельные сессии, worktree сами, браузер, панели</td><td><code>-p</code>, все команды, дешевый старт</td><td>IDE, облачные агенты</td></tr>
+        <tr><td>Слабое</td><td>+20-30k на запрос, нет команд-диалогов и <code>-p</code></td><td>нет панелей и браузера</td><td>чужая обвязка, Claude по ценам API</td></tr>
+      </tbody>
+    </table></div>
+    <div class="fig">
+      <span class="cap"><b>табл. 16.1</b> откуда MCP и кто их видит</span>
+      <div class="tbl-wrap"><table class="t">
+      <thead><tr><th>Источник</th><th>Desktop</th><th>CLI</th></tr></thead>
+      <tbody>
+        <tr><td><code>~/.claude.json</code>, <code>.mcp.json</code></td><td>да</td><td>да</td></tr>
+        <tr><td>конфиг Desktop</td><td>да</td><td>нет</td></tr>
+        <tr><td>коннекторы claude.ai</td><td>да</td><td>да, при входе через подписку</td></tr>
+      </tbody>
+    </table></div>
+    </div>
+    <div class="notes">
+      <div class="note"><span class="m i">вывод</span><p>Если код пишет агент, IDE не центр работы. Основной клиент при подписке - Desktop. Рутину и автоматизацию - в CLI. На API-ключе - только CLI. Cursor - если компания платит за него, а не за Claude.</p></div>
+      <div class="note"><span class="m">примечание</span><p>Плагины для VS Code и JetBrains - тот же Claude Code внутри редактора. Нужны, если код пишешь сам.</p></div>
+    </div>
+  </div>
+</section>
+
+</main>
+</div>
+
+<script>
+(function(){
+  document.querySelectorAll('table.t').forEach(function(t){
+    var h=[].map.call(t.querySelectorAll('thead th'),function(th){return th.textContent.trim()});
+    t.querySelectorAll('tbody tr').forEach(function(tr){[].forEach.call(tr.children,function(td,i){if(h[i])td.setAttribute('data-label',h[i])})});
+  });
+  document.querySelectorAll('.stackbar').forEach(function(b){
+    var ds=[].slice.call(b.children), g=ds.map(function(d){return parseFloat(d.style.flexGrow)||0}), m=Math.max.apply(null,g)||1;
+    ds.forEach(function(d,i){d.style.setProperty('--w',(g[i]/m).toFixed(3))});
+  });
+  var d=document.querySelector('.toc-d'); if(!d) return;
+  var mq=window.matchMedia('(max-width:900px)');
+  function sync(){d.open=!mq.matches}
+  sync(); if(mq.addEventListener) mq.addEventListener('change',sync);
+  d.querySelectorAll('a').forEach(function(a){a.addEventListener('click',function(){if(mq.matches)d.open=false})});
+})();
+(function(){
+  var len=[["до 20 запросов",0.7,"91k"],["20-50",4.5,"178k"],["50-100",11.6,"237k"],["100-200",33.3,"358k"],["200-500",106.2,"567k"],["500+",233.1,"674k"]];
+  function draw(id,data,fmt,max){
+    var root=document.getElementById(id); if(!root) return;
+    data.forEach(function(d){
+      var l=document.createElement("div"); l.textContent=d[0];
+      var t=document.createElement("div"); t.className="t";
+      var f=document.createElement("div"); f.className="f"; f.style.width=(d[1]/max*100)+"%";
+      var v=document.createElement("span"); v.className="v"; v.textContent=fmt(d);
+      t.appendChild(f); t.appendChild(v); root.appendChild(l); root.appendChild(t);
+    });
+  }
+  draw("lenbars",len,function(d){return d[1]+" млн / контекст до "+d[2]},233.1);
+})();
+</script>
