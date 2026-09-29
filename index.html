@@ -198,7 +198,7 @@ nav.toc summary::-webkit-details-marker{display:none}
   <div class="body">
     <ol class="sum">
       <li><b>Сообщение - не один запрос, а цикл.</b> Каждый шаг заново отправляет весь контекст, но неизменное начало читается из кэша. В примере из кэша пришло 97.6% входных токенов. <a class="to" href="#ch1">листы 1-2</a></li>
-      <li><b>Кэш ломают</b> смена модели, <code>/compact</code>, пауза дольше TTL и включение fast mode. TTL - 1 час на подписке и 5 минут по API. Смена effort на Opus 5.5, Sonnet 5.5 и Fable 5.1 кэш не ломает, на других моделях ломает. <a class="to" href="#ch2">лист 2</a></li>
+      <li><b>Кэш ломают</b> смена модели, <code>/compact</code>, пауза дольше времени жизни кэша (TTL) и включение fast mode. TTL - 1 час на подписке и 5 минут по API. Смена effort на Opus 5.5, Sonnet 5.5 и Fable 5.1 кэш не ломает, на других моделях ломает. <a class="to" href="#ch2">лист 2</a></li>
       <li><b>Правка CLAUDE.md посреди сессии не действует</b> до <code>/clear</code>, <code>/compact</code> или перезапуска. <a class="to" href="#ch3">листы 2-3</a></li>
       <li><b>Постоянный контекст входит в каждый запрос.</b> Инструкции, листинг скиллов и память оплачиваются десятки раз за сессию. <a class="to" href="#ch1">лист 1</a></li>
       <li><b>Claude Code и claude.ai живут раздельно.</b> Чаты и Cowork делят память и инструкции между собой, а Claude Code не видит ни того, ни другого. Одно правило приходится класть в оба места. <a class="to" href="#ch3">лист 3</a></li>
@@ -255,7 +255,7 @@ nav.toc summary::-webkit-details-marker{display:none}
 <!-- ========== 2 ========== -->
 <section class="sheet" id="ch2">
   <div class="stamp"><div><span class="lbl">лист</span><span class="no">2</span></div><div><span class="lbl">механика</span><span class="ttl">Запрос, кэш и деньги</span></div><div class="src">prompt caching</div></div>
-  <dl class="defs"><span class="h">определения</span><dt>Кэш промпта</dt><dd>Сохраненное у провайдера начало запроса. Если следующий запрос начинается так же, это начало не обрабатывается заново.</dd></dl>
+  <dl class="defs"><span class="h">определения</span><dt>Кэш промпта</dt><dd>Сохраненное у провайдера начало запроса. Если следующий запрос начинается так же, это начало не обрабатывается заново.</dd><dt>TTL</dt><dd>Время жизни кэша: сколько он хранится после последнего обращения. На подписке 1 час, по API-ключу 5 минут.</dd></dl>
   <div class="body">
     <div class="fig">
       <span class="cap"><b>рис. 2.1</b> кэш работает по префиксу</span>
