@@ -12,6 +12,14 @@
 
 Цифры в примерах - 139 сессий одного разработчика за 19.06-28.09.2026, цены Anthropic API на 24.06.2026.
 
+## Что почитать еще
+
+- [Налог на контекст: куда утекают токены](https://habr.com/ru/articles/1076312/) - Хабр, разбор реальных сессий Claude Code и Codex: кэш и вклад инструкций, скиллов, хуков и MCP в стартовый контекст.
+- [Anatomy of a Claude Code Session](https://codewithmukesh.com/blog/anatomy-claude-code-session/) - устройство сессии на примере .NET-репозитория, на английском.
+- [Год с Claude Code: как собрать рабочую конфигурацию](https://habr.com/ru/companies/alpinadigital/articles/1032134/) - Хабр, слои личной настройки.
+- [Multi-agent, One Harness](https://dev.to/tacoda/multi-agent-one-harness-3bld) - одна обвязка для команды на нескольких агентах, на английском.
+- Документация Anthropic: [окно контекста](https://code.claude.com/docs/en/context-window), [кэш промптов](https://code.claude.com/docs/en/prompt-caching), [стоимость](https://code.claude.com/docs/en/costs).
+
 ## Лицензия
 
 [CC BY 4.0](LICENSE). Можно копировать и переделывать, в том числе для своих докладов, с указанием автора и ссылкой на оригинал.
